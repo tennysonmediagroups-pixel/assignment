@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Assignment requests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cedarville+Cursive&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Huninn&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<style>
+/* iOS system look: grouped forms, large title, system colours, SF stack */
+:root{color-scheme:light;--bg:#f2f2f7;--sf:#fff;--tx:#000;--tx2:rgba(60,60,67,.6);--tx3:rgba(60,60,67,.3);--ac:#007aff;--ac-press:#0062cc;--fill:rgba(120,120,128,.12);--fill2:rgba(120,120,128,.08);--sep:rgba(60,60,67,.22);--ok:#248a3d;--wn:#c93400;--err:#ff3b30;--glass:rgba(249,249,249,.86);--font:"Google Sans","Roboto","Huninn",-apple-system,BlinkMacSystemFont,"Helvetica Neue",system-ui,sans-serif;--script:"Cedarville Cursive","Huninn","Google Sans",cursive}
+*{box-sizing:border-box}html{color-scheme:light;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.3 var(--font);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:8px}
+.bar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:env(safe-area-inset-top) max(16px,calc(50% - 280px)) 0;background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
+.bar button{background:none;border:0;color:var(--ac);cursor:pointer;padding:12px 0;font-size:17px}.bar button:active{opacity:.4}
+#app{position:relative;overflow-x:clip}
+.page{position:relative;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
+/* page transition layers (iOS push / pop) */
+.ov{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.ovs{position:absolute;inset:0;overflow:hidden}
+.dim{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60}
+.lift{box-shadow:-12px 0 32px rgba(0,0,0,.16)}
+.moving{will-change:transform}
+.req{color:var(--err)}
+.foot.err{color:var(--err)}
+.upload-zone.err{box-shadow:0 0 0 2px var(--err)}
+.btn.dis{opacity:.4}
+main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:0 16px 48px}
+h1{font-size:34px;line-height:41px;font-weight:700;letter-spacing:.37px;margin:8px 0 6px}
+.sub{color:var(--tx2);margin:0 0 20px;font-size:15px;line-height:20px}
+label.f{display:block;margin-bottom:18px}label.f>span{display:block;font-size:13px;color:var(--tx2);margin:0 0 6px;padding-left:16px}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],input:not([type]),textarea{width:100%;min-height:46px;padding:0 16px;border:0;border-radius:10px;background:var(--sf);font-size:17px;appearance:none;-webkit-appearance:none;box-shadow:none;outline:none}
+input::placeholder,textarea::placeholder{color:var(--tx3)}
+textarea{padding:12px 16px;min-height:110px;resize:vertical;line-height:1.35}
+.select-wrap{position:relative;display:block}
+.select-wrap select{width:100%;min-height:46px;padding:0 40px 0 16px;border:0;border-radius:10px;background:var(--sf);font-size:17px;appearance:none;-webkit-appearance:none;cursor:pointer}
+.select-wrap select:focus{outline:none}
+.select-wrap::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;margin-top:-6px;border:solid var(--tx3);border-width:0 2px 2px 0;transform:rotate(45deg);pointer-events:none}
+.hint{color:var(--tx2);font-size:13px;line-height:18px;margin:6px 0 0;padding-left:16px}
+.foot{color:var(--tx2);font-size:13px;line-height:18px;margin:7px 0 0;padding:0 16px}
+
+/* Buttons */
+.btn{min-height:50px;padding:0 20px;border:0;border-radius:14px;background:var(--ac);color:#fff;font-weight:600;font-size:17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:opacity .1s}
+.btn:active{opacity:.6}.btn.g{background:var(--fill);color:var(--ac)}.btn.w{width:100%}
+.sw{font-size:15px;margin-top:18px;color:var(--tx2);text-align:center}.sw button{background:none;border:0;color:var(--ac);cursor:pointer;padding:0;font-size:15px;font-weight:600}
+
+/* Inset grouped lists. Separators start at the text edge, as in Settings. */
+h2{font-size:13px;line-height:18px;font-weight:400;color:var(--tx2);margin:26px 0 7px;padding-left:16px;text-transform:uppercase;letter-spacing:-.08px}
+dl,.grp,.box,.tl,.file-list{background:var(--sf);border-radius:10px}
+.grp{overflow:hidden}.file-list{margin-top:10px;overflow:hidden;display:block}
+.grp>*,.file-list>*,dl>div,.tl>li{position:relative}
+.grp>*+*::before,.file-list>*+*::before,dl>div+div::before,.tl>li+li::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+dl{margin:0;padding:0}dl div{display:flex;justify-content:space-between;gap:16px;padding:12px 16px}
+dt{color:var(--tx)}dd{margin:0;text-align:right;color:var(--tx2);overflow-wrap:anywhere}
+.row{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:12px 16px;min-height:56px;text-align:left;cursor:pointer;color:inherit}
+.row:active{background:var(--fill)}.row>span:first-child{flex:1;min-width:0}.row b{font-weight:600}
+.row small{display:block;color:var(--tx2);font-size:15px;margin-top:2px;line-height:20px}.row .chev{color:var(--tx3);font-size:22px}
+.st{font-size:15px;white-space:nowrap;font-weight:600;color:var(--c,var(--ac))}
+.box{padding:16px;margin:0 0 18px}.box b{font-size:28px;line-height:34px;display:block;letter-spacing:.36px}.box p{margin:6px 0 0;color:var(--tx2)}
+.tl{margin:0;padding:0;font-size:15px;color:var(--tx2)}
+.meta{color:var(--tx2);font-size:15px;margin:0 0 18px}
+h1.script{font-family:var(--script);font-weight:400;font-size:30px;line-height:42px;letter-spacing:0}
+/* Progress updates: one entry per admin/student action, separated by real <hr> rules */
+.tl{overflow:hidden}
+.upd{padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.upd{position:relative}
+.upd-dot{position:relative;z-index:1;flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--c,var(--ac));box-shadow:0 0 0 3px var(--sf)}
+/* vertical line joining the dots; runs through the gap left by the <hr> (which starts to the right of it) */
+.tl>.upd::before{content:"";position:absolute;left:20.5px;top:0;bottom:0;width:1.5px;background:var(--tx3)}
+.tl>.upd:first-of-type::before{top:25px}
+.tl>.upd:last-of-type::before{bottom:calc(100% - 25px)}
+.tl>.upd:only-of-type::before{display:none}
+.upd-body{flex:1;min-width:0}
+.upd-title{display:block;font-size:17px;font-weight:600;line-height:22px;color:var(--c,var(--tx))}
+.upd-msg{margin:2px 0 0;font-size:15px;line-height:21px;color:var(--tx)}
+.upd-meta{margin:4px 0 0;font-size:13px;line-height:18px;color:var(--tx2)}
+.tl hr{border:0;border-top:.5px solid var(--sep);height:0;margin:0 0 0 38px}
+.empty-upd{padding:16px;color:var(--tx2);font-size:15px}
+.act{position:sticky;bottom:0;z-index:20;display:flex;gap:10px;padding:12px max(16px,calc(50% - 280px)) calc(12px + env(safe-area-inset-bottom));background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep)}.act .btn{flex:1}
+.fig{flex:1;display:flex;align-items:center;justify-content:center;padding:16px 0}.fig .pg{fill:#fff;stroke:var(--sep);stroke-width:2}.fig .ln{fill:none;stroke:var(--ac);stroke-width:2.2;stroke-linecap:round}
+
+/* Form cells: label left, value right */
+.cell{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 16px}
+.cell .lb{flex:none;min-width:88px}
+.grp .cell input{flex:1;min-width:0;min-height:46px;padding:0;border-radius:0;background:none;text-align:right}
+.grp .cell input.num{flex:none;width:64px;margin-left:auto}
+.grp .cell input[type=number]{-moz-appearance:textfield}.grp .cell input::-webkit-inner-spin-button,.grp .cell input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.cell .select-wrap{flex:1}
+.cell .select-wrap select{min-height:46px;padding:0 20px 0 0;background:none;border-radius:0;color:var(--ac);text-align:right;text-align-last:right}
+.cell .select-wrap::after{right:2px}
+.grp textarea{display:block;border-radius:0;background:none;padding:12px 16px}
+.stepper{display:inline-flex;flex:none;background:var(--fill);border-radius:8px;overflow:hidden}
+.stepper button{width:47px;height:32px;border:0;background:none;font-size:22px;line-height:1;cursor:pointer}.stepper button:active{background:var(--fill)}
+.stepper button+button{box-shadow:-.5px 0 0 var(--tx3)}
+.seg{display:flex;width:100%;padding:2px;background:var(--fill);border-radius:9px;margin:7px 0}
+.seg button{flex:1;min-height:32px;border:0;border-radius:7px;background:none;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
+.seg button.on{background:#fff;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04)}
+
+/* Files */
+.upload-zone{background:var(--sf);border-radius:10px;padding:18px 16px;text-align:center;cursor:pointer;position:relative}
+.upload-zone:active,.upload-zone.drag{background:var(--fill)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{width:44px;height:44px;margin:0 auto 8px;border-radius:10px;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.upload-title{font-weight:600}.upload-sub{color:var(--tx2);font-size:13px;line-height:18px;margin-top:4px}
+.upload-btn{margin-top:8px;display:inline-block;color:var(--ac);font-weight:600;font-size:17px}
+.file-chip{display:flex;align-items:center;gap:12px;padding:10px 16px;font-size:17px}
+.file-chip .ficon{width:32px;height:32px;border-radius:7px;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.file-chip .fname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-chip .fsize{color:var(--tx2);font-size:15px;white-space:nowrap}
+.file-chip button{border:0;background:none;color:var(--err);font-size:22px;cursor:pointer;padding:4px 6px;line-height:1}
+.file-chip a{color:var(--ac);text-decoration:none;font-size:17px}
+.progress{height:4px;background:var(--fill);border-radius:999px;overflow:hidden;margin-top:10px}.progress i{display:block;height:100%;background:var(--ac);width:0%;transition:width .3s}
+/* Back icon, files icons, deadline dropdown */
+.bar .back{display:flex;align-items:center;min-width:44px;min-height:44px;padding:0;margin-left:-8px}.bar .back img{width:24px;height:24px;display:block}
+.upload-icon img{width:26px;height:26px;display:block}.ficon img{width:20px;height:20px;display:block}
+.grp.vis{overflow:visible}
+.dd{position:relative}
+.dd-btn{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:0 16px;border:0;background:none;color:var(--tx);font-size:17px;text-align:left;cursor:pointer;transition:background .12s}
+.dd-btn:active{background:var(--fill)}
+.grp>.dd:last-child .dd-btn{border-radius:0 0 10px 10px}
+.grp>.dd:first-child .dd-btn{border-top-left-radius:10px;border-top-right-radius:10px}
+.dd-btn .lb{flex:none;min-width:88px}
+.dd-val{flex:1;min-width:0;text-align:right;color:var(--ac);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-chev{flex:none;width:7px;height:7px;border:solid var(--ac);border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform .3s cubic-bezier(.2,.9,.3,1)}
+.dd.open .dd-chev{transform:translateY(2px) rotate(225deg)}
+.dd-menu{position:absolute;right:10px;top:calc(100% + 2px);z-index:30;min-width:244px;max-width:calc(100vw - 32px);max-height:min(60vh,340px);overflow:auto;overscroll-behavior:contain;padding:6px;border-radius:14px;background:rgba(255,255,255,.88);backdrop-filter:saturate(180%) blur(30px);-webkit-backdrop-filter:saturate(180%) blur(30px);box-shadow:0 16px 44px rgba(0,0,0,.2),0 0 0 .5px rgba(0,0,0,.1);opacity:0;visibility:hidden;pointer-events:none;transform:scale(.9) translateY(-8px);transform-origin:top right;transition:opacity .15s ease,transform .28s cubic-bezier(.2,.9,.3,1.15),visibility 0s .28s}
+.dd.up .dd-menu{top:auto;bottom:calc(100% + 2px);transform-origin:bottom right;transform:scale(.9) translateY(8px)}
+.dd.open .dd-menu{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition-delay:0s}
+.dd-opt{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:9px;background:none;font-size:17px;text-align:left;cursor:pointer}
+.dd-opt>span{flex:1;min-width:0}
+.dd-opt+.dd-opt::before{content:"";position:absolute;top:0;left:12px;right:12px;height:.5px;background:var(--sep)}
+.dd-opt:hover,.dd-opt:focus-visible{background:var(--fill)}.dd-opt:active{background:rgba(120,120,128,.2)}
+.dd-opt.sel{font-weight:600}
+.dd-n{font-style:normal;font-weight:500;font-size:14px;line-height:20px;min-width:26px;padding:1px 8px;text-align:center;border-radius:999px;background:var(--fill);color:var(--tx2);font-variant-numeric:tabular-nums}
+.dd-check{flex:none;width:6px;height:12px;border:solid var(--ac);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);transition:transform .22s cubic-bezier(.2,.9,.3,1.4);margin-right:4px}
+.dd-opt.sel .dd-check{transform:rotate(45deg) scale(1)}
+/* pending row, fade-in, toast */
+.row[disabled]{cursor:default;color:inherit}.row[disabled]:active{background:none}
+.fc{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;vertical-align:-2px}
+.fc svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.row.pend{animation:rowIn .42s cubic-bezier(.2,.9,.3,1.15)}
+.pulse{color:var(--tx2)!important;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+@keyframes rowIn{from{opacity:0;transform:translateY(-10px) scale(.98)}}
+.fadein{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}}
+.toast{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:50%;z-index:100;max-width:calc(100vw - 32px);padding:11px 18px;border-radius:999px;background:rgba(30,30,32,.92);color:#fff;font-size:15px;font-weight:500;box-shadow:0 8px 28px rgba(0,0,0,.25);transform:translate(-50%,-160%);transition:transform .5s cubic-bezier(.2,.9,.3,1.15);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast.on{transform:translate(-50%,0)}
+/* ===== Admin panel only: responsive layout (students keep the original single-column view) ===== */
+.bar .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;color:var(--tx)}
+.bar .brand i{font-style:normal;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--fill);color:var(--tx2)}
+.bar-r{display:flex;align-items:center;gap:16px}.who{display:none;color:var(--tx2);font-size:15px}
+.adm-head{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.adm-head .sub{margin-bottom:18px}
+.adm-refresh{min-height:38px;padding:0 16px;font-size:15px;border-radius:10px;flex:none}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.stat{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--sf);border:0;border-radius:12px;padding:14px 16px;cursor:pointer;box-shadow:0 0 0 2px transparent;transition:box-shadow .15s,transform .1s}
+.stat:active{transform:scale(.98)}.stat.on{box-shadow:0 0 0 2px var(--ac)}
+.stat-n{font-size:28px;line-height:34px;font-weight:700;color:var(--c,var(--tx));font-variant-numeric:tabular-nums}
+.stat-l{font-size:14px;line-height:19px;color:var(--tx2)}
+.adm-tools{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+.adm-search{position:relative;flex:1;min-width:0}
+.adm-search svg{position:absolute;left:14px;top:50%;margin-top:-9px;width:18px;height:18px;fill:none;stroke:var(--tx2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.adm-search input[type=text]{padding-left:42px}
+.adm-count{flex:none;color:var(--tx2);font-size:14px}
+.tbl{margin-top:0}
+.thead{display:none}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto 16px;grid-template-areas:"ref st chev" "meta meta chev";align-items:center;gap:2px 12px;width:100%;min-height:56px;padding:12px 16px;background:none;border:0;text-align:left;cursor:pointer;color:inherit}
+.arow:active{background:var(--fill)}
+.arow .c-ref{grid-area:ref;font-weight:600}.arow .c-st{grid-area:st}.arow .chev{grid-area:chev;color:var(--tx3);font-size:22px;text-align:right}
+.arow .c-meta{grid-area:meta;color:var(--tx2);font-size:15px;line-height:20px}
+.arow .c-sub,.arow .c-stu,.arow .c-pg,.arow .c-fl,.arow .c-dl{display:none}
+/* request detail (admin): stacked on mobile, two columns on desktop */
+.adm-grid{display:flex;flex-direction:column}.adm-side{display:contents}
+.adm-a{order:1}.adm-left{order:2}.adm-c{order:3}
+@media (min-width:640px){
+  main.adm{padding:0 24px 56px}
+  .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .who{display:inline}
+}
+@media (min-width:860px){
+  main.adm{padding:0 32px 64px}
+  .bar.adm,.act.adm{padding-left:max(16px,calc(50% - 528px));padding-right:max(16px,calc(50% - 528px))}
+  .act.adm{justify-content:flex-end}.act.adm .btn{flex:0 1 220px}
+  .stats{gap:16px}.stat{padding:18px 20px}.stat:hover{box-shadow:0 0 0 2px var(--fill)}.stat.on:hover{box-shadow:0 0 0 2px var(--ac)}
+  .adm-search{flex:none;width:420px}.adm-count{margin-left:auto}
+  .thead,.arow{display:grid;grid-template-columns:170px minmax(0,2fr) minmax(0,1.2fr) 56px 60px 120px 130px 14px;grid-template-areas:none;column-gap:14px;row-gap:0;align-items:center;padding:0 20px}
+  .thead{min-height:40px;background:var(--fill2);font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--tx2)}
+  .arow{min-height:60px}.arow:hover{background:var(--fill2)}
+  .arow>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .arow .c-ref,.arow .c-st,.arow .chev{grid-area:auto}
+  .arow .c-ref{font-size:14px}
+  .arow .c-sub,.arow .c-stu,.arow .c-pg,.arow .c-fl,.arow .c-dl{display:block}
+  .arow .c-stu,.arow .c-pg,.arow .c-fl,.arow .c-dl{color:var(--tx2);font-size:15px}
+  .arow .c-meta{display:none}
+  .tbl>*+*::before{left:20px}
+  .adm-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,4fr);gap:0 28px;align-items:start}
+  .adm-side{display:block}.adm-a,.adm-left,.adm-c{order:0}
+  .adm-a:empty+.adm-c h2{margin-top:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="/skeleton.js"></script>
+<script>
+const API = "";
+const SK = window.Skeleton || {mask(){return()=>{}},maskAll(){return()=>{}},unmask(){}};   // skeleton.js is optional: page works without it
+const $ = id => document.getElementById(id);
+const app = $("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DEADLINES = ["Within 1 day","Within 3 days","Within 7 days","Flexible"];
+const transitions = {"Submitted":["Under review","Rejected"],"Under review":["Rejected"],"Confirmed":["In progress"],"In progress":["Ready"],"Ready":["Completed"]};
+let user = null, requests = [], screen = "intro", selected = null, filter = "all", authMode = "in";
+let form = {subject:"",pages:5,deadline:"Within 7 days",notes:"",files:[],method:"mobile",contact:"",guardian:""};
+let busy = false, loading = false, fresh = false, skeletonCount = 3, adminQuery = "";
+
+async function api(path, options={}) {
+  const res = await fetch(API + path, {...options, credentials:"same-origin", headers:{"Content-Type":"application/json", ...(options.headers||{})}});
+  let data = {}; try{ data = await res.json(); }catch(_){}
+  if(!res.ok) {
+    const msg = data.detail || data.message || `Request failed (${res.status})`;
+    if(Array.isArray(data.detail)) throw new Error(data.detail.map(d=>d.msg).join(", "));
+    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+  }
+  return data;
+}
+function notify(m){ alert(m); }
+function setBusy(v){ busy=v; }
+function statusColor(s){ if(s==="Completed") return "var(--ok)"; if(["Rejected","Cancelled"].includes(s)) return "var(--err)"; if(s==="Submitted") return "var(--wn)"; return "var(--ac)"; }
+function statusHTML(s){ return `<span class="st" style="--c:${statusColor(s)}">${esc(s)}</span>`; }
+function dateText(v){ return v ? new Date(v).toLocaleDateString() : "Not set"; }
+function dateTimeText(v){ return v ? new Date(v).toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit"}) : "Not set"; }
+// Friendly wording for each stage a request moves through.
+const UPDATE_TEXT = {
+  "Submitted":     ["Request received","Your request has been submitted and is waiting for review."],
+  "Under review":  ["Review started","We are going through your request and resources."],
+  "Quotation sent":["Quotation ready","A price and delivery date have been sent. Please approve or decline."],
+  "Confirmed":     ["Quotation approved","The order is confirmed and will be assigned to a writer."],
+  "In progress":   ["Work started","Your assignment is now being written."],
+  "Ready":         ["Work completed","Your assignment is finished and ready for delivery."],
+  "Completed":     ["Order delivered","This order is complete. Thank you!"],
+  "Rejected":      ["Request declined","We are unable to take up this request."],
+  "Cancelled":     ["Quotation declined","The quotation was declined and the request is closed."]
+};
+function updatesHTML(list){
+  if(!list.length) return `<div class="tl"><p class="empty-upd">No updates yet. We will post progress here.</p></div>`;
+  return `<div class="tl">${list.map((h,i)=>{
+    const [title,msg]=UPDATE_TEXT[h.to]||[h.to,""];
+    let extra="";
+    if(h.to==="Quotation sent"&&h.note){ const n=Number(String(h.note).replace(/[^0-9.]/g,"")); extra=isNaN(n)?esc(h.note):`Quoted ₹${n.toLocaleString("en-IN")}`; }
+    const who=h.by===user?.name&&user?.role!=="admin"?"You":esc(h.by||"");
+    return `${i?"<hr>":""}<div class="upd"><span class="upd-dot" style="--c:${statusColor(h.to)}"></span><div class="upd-body"><span class="upd-title" style="--c:${statusColor(h.to)}">${esc(title)}</span>${msg?`<p class="upd-msg">${esc(msg)}</p>`:""}<p class="upd-meta">${extra?extra+" · ":""}${dateTimeText(h.at)}${who?" · "+who:""}</p></div></div>`;
+  }).join("")}</div>`;
+}
+/* ---------- iOS-style navigation transitions ---------- */
+// Screen depth decides direction: deeper = push (new page slides in from the right),
+// shallower = pop (current page slides away to the right, previous page returns from the left with parallax).
+const DEPTH={intro:0,auth:1,home:2,details:3,detail:3,done:4};
+function go(s,id=null,dir){
+  const prev=screen; screen=s; if(id) selected=id;
+  render(dir || (prev===s||!(s in DEPTH) ? "none" : DEPTH[s]>DEPTH[prev] ? "forward" : "back"));
+  window.scrollTo(0,0);
+}
+// Real damped-spring physics (x'' = -k(x-1) - c·x'), solved analytically and sampled into keyframes.
+// stiffness 380 / damping 38 / mass 1 => damping ratio ~0.97: iOS push feel, settles fast, no visible bounce.
+const SPRING={stiffness:380,damping:38,mass:1,parallax:30,dim:.1};
+let _spring=null;
+function springCurve(){
+  if(_spring) return _spring;
+  const {stiffness:k,damping:c,mass:m}=SPRING, w0=Math.sqrt(k/m), z=c/(2*Math.sqrt(k*m));
+  const f=t=>{
+    if(z<1){ const wd=w0*Math.sqrt(1-z*z); return 1-Math.exp(-z*w0*t)*(Math.cos(wd*t)+(z*w0/wd)*Math.sin(wd*t)); }
+    if(z===1) return 1-Math.exp(-w0*t)*(1+w0*t);
+    const s=w0*Math.sqrt(z*z-1), r1=-z*w0+s, r2=-z*w0-s;
+    return 1-(r2*Math.exp(r1*t)-r1*Math.exp(r2*t))/(r2-r1);
+  };
+  let T=0; for(let t=0;t<1.5;t+=1/240){ if(Math.abs(1-f(t))>.001) T=t+1/240; }   // settling time
+  T=Math.min(.9,Math.max(.25,T));
+  const N=Math.max(20,Math.round(T*90)), p=[];
+  for(let i=0;i<=N;i++) p.push(f(i/N*T));
+  p[N]=1;
+  return _spring={p,ms:Math.round(T*1000)};
+}
+let _endNav=null;
+function mount(html,dir){
+  if(_endNav) _endNav();                                   // finish any running transition instantly
+  const old=app.querySelector(".page");
+  const page=document.createElement("div"); page.className="page"; page.innerHTML=html;
+  const canAnimate=dir&&dir!=="none"&&old&&typeof Element.prototype.animate==="function"&&!matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!canAnimate){ app.replaceChildren(page); return; }
+
+  const y=window.scrollY, fwd=dir==="forward";
+  // Leaving page becomes a fixed overlay that keeps its scroll position.
+  old.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));   // avoid duplicate ids with the new page
+  const ov=document.createElement("div"), sc=document.createElement("div"), dimOld=document.createElement("div"), dimNew=document.createElement("div");
+  ov.className="ov moving"; sc.className="ovs"; dimOld.className="dim"; dimNew.className="dim";
+  ov.inert=true; ov.setAttribute("aria-hidden","true");
+  sc.appendChild(old); ov.append(sc,dimOld); page.appendChild(dimNew);
+  app.append(page,ov);
+  sc.scrollTop=y; window.scrollTo(0,0);
+  page.classList.add("moving");
+  (fwd?page:ov).classList.add("lift");
+  page.style.zIndex=fwd?2:1; ov.style.zIndex=fwd?1:2;
+
+  const {p,ms}=springCurve(), {parallax:px,dim}=SPRING;
+  const kf=fn=>p.map((v,i)=>({offset:i/(p.length-1),...fn(v)}));
+  const tx=v=>({transform:`translate3d(${v}%,0,0)`});
+  const opt={duration:ms,easing:"linear",fill:"both"};
+  const anims=fwd
+    ? [ page.animate(kf(v=>tx((1-v)*100)),opt),
+        ov.animate(kf(v=>tx(-px*v)),opt),
+        dimOld.animate(kf(v=>({opacity:dim*v})),opt) ]
+    : [ ov.animate(kf(v=>tx(v*100)),opt),
+        page.animate(kf(v=>tx(-px*(1-v))),opt),
+        dimNew.animate(kf(v=>({opacity:dim*(1-v)})),opt) ];
+  let done=false;
+  const end=()=>{ if(done) return; done=true; _endNav=null; anims.forEach(a=>{try{a.cancel()}catch(_){}}); ov.remove(); dimNew.remove(); page.classList.remove("moving","lift"); page.style.zIndex=""; };
+  _endNav=end;
+  Promise.all(anims.map(a=>a.finished)).then(end,end);
+}
+async function refresh(){ const d = await api("/api/requests"); requests = d.requests || []; }
+function readHint(){ try{ return JSON.parse(localStorage.getItem("asg_hint")||"null"); }catch(_){ return null; } }
+function saveHint(){ try{ if(user) localStorage.setItem("asg_hint",JSON.stringify({name:user.name,role:user.role,count:Math.min(6,requests.filter(r=>user.role==="admin"||r.owner===user.id).length)})); }catch(_){} }
+function clearHint(){ try{ localStorage.removeItem("asg_hint"); }catch(_){} }
+function hintCount(){ const h=readHint(); return Math.max(1,Math.min(6,(h&&h.count)||3)); }
+// Show the dashboard instantly as a skeleton, then fill in the real data.
+async function loadHome(){
+  skeletonCount=hintCount(); loading=true; go("home");
+  try{ await refresh(); saveHint(); }catch(e){ notify(e.message); }
+  finally{ loading=false; fresh=true; if(screen==="home") render(); fresh=false; }
+}
+async function boot(){
+  const h=readHint();
+  if(h&&h.name){ user={id:"",name:h.name,role:h.role}; skeletonCount=hintCount(); loading=true; screen="home"; render(); }
+  try{
+    const d = await api("/api/me");
+    if(!d.user){ user=null; loading=false; clearHint(); go("intro",null,"none"); return; }
+    user = d.user; await refresh(); saveHint(); loading=false; fresh=!!h; go("home",null,"none"); fresh=false;
+  }catch(_){ user=null; loading=false; go("intro",null,"none"); }
+}
+function header(l="",r="",wide=false){ return `<div class="bar${wide?" adm":""}">${l}${r}</div>`; }
+function field(label,name,type="text",value="",attrs=""){ return `<label class="f"><span>${label}</span><input id="${name}" type="${type}" value="${esc(value)}" ${attrs}></label>`; }
+function selectField(label, id, options, value){
+  return `<label class="f"><span>${label}</span><span class="select-wrap"><select id="${id}">${options.map(o=>`<option value="${o.value||o}" ${String(o.value||o)===String(value)?"selected":""}>${o.label||o}</option>`).join("")}</select></span></label>`;
+}
+function detailRow(label,value){ return value!==""&&value!=null&&String(value).trim()!==""?`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`:""; }
+function fileIcon(name){ const n=name.toLowerCase(); const id=n.endsWith(".pdf")?56215:/\.(jpg|jpeg|png|heic|webp)$/.test(n)?11561:56079; return `<img src="${IC(id)}" alt="">`; }
+function formatSize(b){ if(!b) return ""; if(b<1024) return b+" B"; if(b<1024*1024) return (b/1024).toFixed(1)+" KB"; return (b/1024/1024).toFixed(1)+" MB"; }
+
+// --- FILE UPLOAD ---
+let uploading = false;
+async function handleFiles(input){
+  const files = Array.from(input.files || []);
+  if("value" in input) input.value = "";
+  if(!files.length) return;
+  if(form.files.length + files.length > 10){ notify("Max 10 files"); return; }
+  const big = files.find(f=>f.size > 25*1024*1024);
+  if(big){ notify(big.name + " is too large. Max 25 MB."); return; }
+  const fd = new FormData();
+  files.forEach(f=>fd.append("files", f));
+  try{
+    uploading = true;
+    const res = await fetch("/api/upload", {method:"POST", body: fd, credentials:"same-origin"});
+    let data = {}; try{ data = await res.json(); }catch(_){}
+    if(!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Upload failed");
+    syncForm(); form.files = [...form.files, ...data.files];
+    render();
+  }catch(e){ notify(e.message); }
+  finally{ uploading = false; }
+}
+const IC=(id,c="007AFF")=>`https://img.icons8.com/?size=100&amp;id=${id}&amp;format=png&amp;color=${c}`;
+/* ---------- Reusable iOS-style dropdown ---------- */
+const DD = {};
+function dropdown(id, label, options, value, onPick){
+  DD[id] = onPick;
+  const cur = options.find(o=>o.value===value) || options[0];
+  return `<div class="dd" data-dd="${id}"><input type="hidden" id="${id}" value="${esc(cur.value)}">
+    <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="lb">${esc(label)}</span><span class="dd-val">${esc(cur.label)}</span><i class="dd-chev"></i></button>
+    <div class="dd-menu" role="listbox" aria-label="${esc(label)}">${options.map(o=>`<button type="button" role="option" class="dd-opt${o.value===cur.value?" sel":""}" aria-selected="${o.value===cur.value}" data-v="${esc(o.value)}"><span>${esc(o.label)}</span>${o.count!=null?`<em class="dd-n">${o.count}</em>`:""}<i class="dd-check"></i></button>`).join("")}</div></div>`;
+}
+function closeDD(except){ document.querySelectorAll(".dd.open").forEach(c=>{ if(c===except) return; c.classList.remove("open"); c.querySelector(".dd-btn").setAttribute("aria-expanded","false"); }); }
+function toggleDD(c){
+  if(c.classList.contains("open")){ closeDD(); return; }
+  closeDD(c);
+  const menu=c.querySelector(".dd-menu");
+  c.classList.toggle("up", c.getBoundingClientRect().bottom+menu.offsetHeight>innerHeight-80);
+  c.classList.add("open"); c.querySelector(".dd-btn").setAttribute("aria-expanded","true");
+  (menu.querySelector(".dd-opt.sel")||menu.querySelector(".dd-opt")).focus({preventScroll:true});
+}
+function pickDD(c,opt){
+  const v=opt.dataset.v;
+  c.querySelector('input[type=hidden]').value=v;
+  c.querySelector(".dd-val").textContent=opt.querySelector("span").textContent;
+  c.querySelectorAll(".dd-opt").forEach(b=>{ const on=b===opt; b.classList.toggle("sel",on); b.setAttribute("aria-selected",on); });
+  setTimeout(closeDD,140);
+  c.querySelector(".dd-btn").focus({preventScroll:true});
+  const fn=DD[c.dataset.dd]; if(fn) fn(v);
+}
+document.addEventListener("click",e=>{
+  const opt=e.target.closest(".dd-opt"); if(opt){ pickDD(opt.closest(".dd"),opt); return; }
+  const btn=e.target.closest(".dd-btn"); if(btn){ toggleDD(btn.closest(".dd")); return; }
+  closeDD();
+});
+document.addEventListener("keydown",e=>{
+  const c=document.querySelector(".dd.open"); if(!c) return;
+  if(e.key==="Escape"){ closeDD(); c.querySelector(".dd-btn").focus(); }
+  else if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); const o=[...c.querySelectorAll(".dd-opt")], i=o.indexOf(document.activeElement); o[(i+(e.key==="ArrowDown"?1:-1)+o.length)%o.length].focus(); }
+});
+function toast(msg){
+  let t=document.querySelector(".toast"); if(!t){ t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
+  t.textContent=msg; void t.offsetWidth; t.classList.add("on");
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("on"),2800);
+}
+function syncForm(){ if(!$("subject")) return; form.subject=$("subject").value; form.pages=Number($("pages").value)||1; form.deadline=$("deadline").value; form.notes=$("notes").value; form.contact=$("contact").value; }
+function setMethod(m){ syncForm(); form.method=m; render(); }
+function stepPages(d){ const p=$("pages"); p.value=Math.min(500,Math.max(1,(Number(p.value)||1)+d)); }
+function removeFile(idx){ syncForm(); form.files.splice(idx,1); render(); }
+function filesHTML(){
+  return `<div class="file-list">${form.files.map((f,i)=>`
+    <div class="file-chip"><span class="ficon">${fileIcon(f.name)}</span><span class="fname">${esc(f.name)}</span><span class="fsize">${formatSize(f.size)}</span><button onclick="removeFile(${i})" aria-label="Remove">×</button></div>
+  `).join("")}</div>`;
+}
+function detailFilesHTML(files){
+  if(!files || !files.length) return "";
+  return `<h2>Resources for writer</h2><div class="file-list">${files.map(f=>{
+    const name = typeof f==="string" ? f : f.name;
+    const url = typeof f==="object" ? f.url : "";
+    return `<div class="file-chip"><span class="ficon">${fileIcon(name)}</span><span class="fname">${esc(name)}</span>${url?`<a href="${esc(url)}" target="_blank" rel="noopener">View</a>`:""}</div>`;
+  }).join("")}</div>`;
+}
+
+function placeholderRequests(n){
+  const subj=["Physics assignment","Chemistry lab report","History essay","Maths worksheet"];
+  return Array.from({length:n},(_,i)=>({ref:"REQ-20260101-ABC123",subject:subj[i%subj.length],pages:8,by:"Student name",deadline:"Within 7 days",status:"Submitted",files:[]}));
+}
+function rowHTML(r,admin){
+  const n=r.files?r.files.length:0;
+  const files=n?` · <span class="fc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${n} file${n>1?"s":""}</span>`:"";
+  const pend=!!r._pending;
+  return `<button class="row${pend?" pend":""}"${pend?" disabled":` onclick="go('detail','${esc(r.ref)}')"`}><span><b>${pend?"New request":esc(r.ref)}</b><small>${esc(r.subject)} · ${r.pages} pages${admin?" · "+esc(r.by):""}${files}</small></span>${pend?`<span class="st pulse">Sending…</span>`:statusHTML(r.status)}<span class="chev" data-sk-skip>${pend?"":"›"}</span></button>`;
+}
+function render(dir="none"){
+  const admin = user?.role==="admin";
+  const wide = admin && (screen==="home"||screen==="detail");
+  let body="", actions="", left="", right=user?`<button onclick="logout()">Sign out</button>`:"";
+  if(wide){ right=`<span class="bar-r"><span class="who">${esc(user.name)}</span><button onclick="logout()">Sign out</button></span>`; if(screen==="home") left=`<span class="brand">Assignment Service <i>Admin</i></span>`; }
+  if(["auth","details","detail"].includes(screen)) left=`<button class="back" onclick="back()" aria-label="Back"><img src="${IC(40024)}" alt="" onerror="this.replaceWith('‹')"></button>`;
+  if(screen==="intro"){
+    body=`<h1 class="script">We save your time and write your assignments.</h1><p class="sub">A simpler way to request, review and track assignment work.</p>
+    <div class="fig"><svg viewBox="0 0 280 230" style="width:100%;max-width:320px"><ellipse cx="140" cy="205" rx="112" ry="13" fill="rgba(120,120,128,.12)"/><path class="pg" d="M30 58Q85 44 140 62V196Q85 180 30 194Z"/><path class="pg" d="M250 58Q195 44 140 62V196Q195 180 250 194Z"/><path class="ln" d="M46 92h70M46 114h70M46 136h70M46 158h70M162 92h72M162 114h72M162 136h72M162 158h72"/></svg></div>`;
+    actions=`<button class="btn w" onclick="go('auth')">Continue</button>`;
+  }
+  if(screen==="auth"){
+    body=`<h1>${authMode==="up"?"Create account":"Sign in"}</h1><p class="sub">Your requests stay connected to your account.</p>
+    ${field("Name or Admin Email","loginId","text","","autocomplete=username placeholder='Your name, or admin email'")}
+    ${field("Password","password","password","","autocomplete=current-password placeholder='Any password you like'")}
+    <p class="hint">${authMode==="up" ? "Students: use your name to create account. Admin cannot create account." : "Students: enter your name. Admin: enter your email."}</p>
+    <p class="sw">${authMode==="up"?"Already registered?":"New here?"} <button onclick="authMode='${authMode==="up"?"in":"up"}';render()">${authMode==="up"?"Sign in":"Create an account"}</button></p>`;
+    actions=`<button class="btn w" onclick="submitAuth()">${authMode==="up"?"Create account":"Sign in"}</button>`;
+  }
+  if(screen==="home"){
+    const matches=(r,f)=>f==="all"||(f==="review"?["Submitted","Under review"].includes(r.status):f==="active"?["Quotation sent","Confirmed","In progress","Ready"].includes(r.status):["Completed","Rejected","Cancelled"].includes(r.status));
+    const real=loading?[]:requests.filter(r=>admin||r.owner===user.id);
+    const list=loading?placeholderRequests(skeletonCount):real.filter(r=>matches(r,filter));
+    const sub=admin?(loading?"12 total · 3 to review":`${real.length} total · ${real.filter(r=>matches(r,"review")).length} to review`):`Hi ${esc(user.name)} — track your requests.`;
+    const opts=[{value:"all",label:"All requests"},{value:"review",label:"To review"},{value:"active",label:"Active"},{value:"done",label:"Closed"}].map(o=>({...o,count:loading?null:real.filter(r=>matches(r,o.value)).length}));
+    body=`<div><h1>${admin?"Admin panel":"Your requests"}</h1><p class="sub"${admin&&loading?" data-skeleton":""}>${sub}</p></div>
+    ${admin?`<div class="grp vis" style="margin-bottom:18px">${dropdown("filter","Show",opts,filter,v=>{ filter=v; setTimeout(()=>{ if(screen==="home") render(); },320); })}</div>`:""}
+    ${list.length?`<div class="grp${fresh?" fadein":""}"${loading?" data-skeleton":""}>${list.map(r=>rowHTML(r,admin)).join("")}</div>`:`<p class="sub" style="margin-top:24px">No requests${filter!=="all"?" in this view":" yet"}.</p>`}`;
+    if(!admin) actions=`<button class="btn w" onclick="newRequest()">New request</button>`;
+    else body=adminHomeHTML(real,list);
+  }
+  if(screen==="details"){
+    body=`<h1>New request</h1><p class="sub">We’ll review it and send a quotation. Nothing is charged yet.</p>
+    <h2>Assignment</h2>
+    <div class="grp vis">
+      <label class="cell"><span class="lb">Subject</span><input id="subject" type="text" value="${esc(form.subject)}" placeholder="Required" autocomplete="off"></label>
+      <div class="cell"><label class="lb" for="pages">Pages</label><input id="pages" class="num" type="number" inputmode="numeric" min="1" max="500" value="${form.pages}"><span class="stepper"><button type="button" onclick="stepPages(-1)" aria-label="Fewer pages">−</button><button type="button" onclick="stepPages(1)" aria-label="More pages">+</button></span></div>
+      ${dropdown("deadline","Deadline",DEADLINES.map(d=>({value:d,label:d})),form.deadline,v=>{form.deadline=v})}
+    </div>
+    <h2>Instructions for the writer</h2>
+    <div class="grp"><textarea id="notes" placeholder="Optional. For example: simple English, use headings, include examples.">${esc(form.notes)}</textarea></div>
+    <h2>Resources <span class="req">· Required</span></h2>
+    <div class="upload-zone" id="dropZone">
+      <input id="fileInput" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.webp,.zip,.txt,.ppt,.pptx,.xls,.xlsx" onchange="handleFiles(this)">
+      <div class="upload-icon"><img src="${IC(4716)}" alt=""></div>
+      <div class="upload-title">Add question paper or notes</div>
+      <div class="upload-sub">Required · PDF, photos, screenshots · up to 10 files, 25 MB each</div>
+      <span class="upload-btn">Choose files</span>
+    </div>
+    ${form.files.length? filesHTML() : `<p class="foot err">Required. Upload your question paper or notes so the writer can start.</p>`}
+    <h2>Contact</h2>
+    <div class="grp">
+      <div class="cell"><div class="seg" role="group" aria-label="Contact method"><button type="button" class="${form.method==="mobile"?"on":""}" onclick="setMethod('mobile')">Mobile</button><button type="button" class="${form.method==="instagram"?"on":""}" onclick="setMethod('instagram')">Instagram</button></div></div>
+      <input type="hidden" id="method" value="${form.method}">
+      <label class="cell"><span class="lb">${form.method==="mobile"?"Number":"Username"}</span><input id="contact" type="text" inputmode="${form.method==="mobile"?"tel":"text"}" value="${esc(form.contact)}" placeholder="${form.method==="mobile"?"+91 98765 43210":"@username"}" autocomplete="off" autocapitalize="off"></label>
+    </div>
+    <p class="foot">We’ll reach you here about your quotation.</p>`;
+    actions=`<button class="btn w${form.files.length?"":" dis"}" aria-disabled="${!form.files.length}" onclick="submitRequest()">Submit request</button>`;
+  }
+  if(screen==="detail"){
+    const r=requests.find(x=>x.ref===selected);
+    if(!r){ body="<h1>Request not found</h1>"; }
+    else{
+      const head=`<h1>${esc(r.subject)}</h1><p class="meta">${esc(r.ref)} · ${statusHTML(r.status)}</p>`;
+      const quoteBox=r.quote?`<div class="box"><span class="hint">Quotation</span><b>₹${Number(r.quote.amount).toLocaleString("en-IN")}</b>Delivery by ${dateText(r.quote.delivery)}<p>${esc(r.quote.note||"")}</p></div>`:"";
+      const quoteForm=admin&&(r.status==="Submitted"||r.status==="Under review")?`<div class="box"><b style="font-size:17px">Send a quotation</b>${field("Price (₹)","quoteAmount","number")}${field("Delivery date","quoteDate","date")}${field("Note (optional)","quoteNote","text")}<button class="btn w" onclick="sendQuote('${esc(r.ref)}')">Send quotation</button></div>`:"";
+      const info=`<dl>${detailRow("Student",r.by)}${detailRow("Pages",r.pages)}${detailRow("Deadline",r.deadline)}${detailRow("Instructions",r.notes)}${detailRow("Contact",r.method + ": " + r.contact)}${detailRow("Guardian",r.guardian)}${detailRow("Created",dateText(r.created_at))}</dl>${detailFilesHTML(r.files)}`;
+      const upd=`<h2>Progress updates</h2>${updatesHTML(r.hist||r.history||[])}`;
+      body = admin
+        ? `${head}<div class="adm-grid"><div class="adm-left">${info}</div><div class="adm-side"><div class="adm-a">${quoteBox}${quoteForm}</div><div class="adm-c">${upd}</div></div></div>`
+        : `${head}${quoteBox}${quoteForm}${info}${upd}`;
+      if(admin){
+        const next = transitions[r.status]||[];
+        actions=next.map(s=>`<button class="btn ${s==="Rejected"?"g":""}" onclick="changeStatus('${esc(r.ref)}','${s}')">${s==="Under review"?"Start review":s==="Rejected"?"Reject":s==="In progress"?"Start work":s==="Ready"?"Mark ready":s==="Completed"?"Mark completed":s}</button>`).join("");
+      } else if(r.status==="Quotation sent"){
+        actions=`<button class="btn" onclick="decision('${esc(r.ref)}',true)">Approve quotation</button><button class="btn g" onclick="decision('${esc(r.ref)}',false)">Decline</button>`;
+      }
+    }
+  }
+  if(screen==="done"){
+    body=`<h1>Request submitted</h1><p class="sub">Your request has been saved. Reference: <b>${esc(selected)}</b>.</p>`;
+    actions=`<button class="btn w" onclick="go('home')">View my requests</button>`;
+  }
+  mount(header(left,right,wide)+`<main data-s="${screen}"${wide?' class="adm"':""}>${body}</main>${actions?`<div class="act${wide?" adm":""}">${actions}</div>`:""}`, dir);
+  if(screen==="details"){
+    $("method").value=form.method; $("deadline").value=form.deadline;
+    const dz=$("dropZone"); if(dz){
+      dz.addEventListener("dragover",e=>{e.preventDefault();dz.classList.add("drag")});
+      dz.addEventListener("dragleave",()=>dz.classList.remove("drag"));
+      dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("drag"); handleFiles({files:e.dataTransfer.files})});
+    }
+  }
+  if(loading&&screen==="home") SK.maskAll(app.querySelector(".page"));   // skeleton built from the real layout
+}
+/* ---------- Admin panel (responsive dashboard) ---------- */
+const CLIP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
+function matchesFilter(r,f){ return f==="all"||(f==="review"?["Submitted","Under review"].includes(r.status):f==="active"?["Quotation sent","Confirmed","In progress","Ready"].includes(r.status):["Completed","Rejected","Cancelled"].includes(r.status)); }
+function admFiltered(){
+  const q=adminQuery.trim().toLowerCase();
+  return requests.filter(r=>matchesFilter(r,filter)&&(!q||[r.ref,r.subject,r.by,r.contact].some(v=>String(v??"").toLowerCase().includes(q))));
+}
+function admRowHTML(r){
+  const n=r.files?r.files.length:0;
+  const meta=`${esc(r.subject)} · ${r.pages} pages · ${esc(r.by)}${n?` · <span class="fc">${CLIP}${n} file${n>1?"s":""}</span>`:""}`;
+  return `<button class="arow" onclick="go('detail','${esc(r.ref)}')"><span class="c-ref">${esc(r.ref)}</span><span class="c-sub">${esc(r.subject)}</span><span class="c-stu">${esc(r.by)}</span><span class="c-pg">${r.pages}</span><span class="c-fl">${n?`<span class="fc">${CLIP}${n}</span>`:"–"}</span><span class="c-dl">${esc(r.deadline||"–")}</span><span class="c-st">${statusHTML(r.status)}</span><span class="chev" data-sk-skip>›</span><span class="c-meta">${meta}</span></button>`;
+}
+function admTableHTML(list,isLoading){
+  if(!list.length) return `<p class="sub" style="margin-top:24px">No requests${adminQuery.trim()?" match your search":filter!=="all"?" in this view":" yet"}.</p>`;
+  return `<div class="grp tbl${fresh?" fadein":""}"${isLoading?" data-skeleton":""}><div class="thead" data-sk-skip aria-hidden="true"><span>Reference</span><span>Subject</span><span>Student</span><span>Pages</span><span>Files</span><span>Deadline</span><span>Status</span><span></span></div>${list.map(admRowHTML).join("")}</div>`;
+}
+function adminHomeHTML(real,placeholders){
+  const rows=loading?placeholders:admFiltered();
+  const sub=loading?"12 total · 3 to review":`${real.length} total · ${real.filter(r=>matchesFilter(r,"review")).length} to review`;
+  const stat=(v,label,color)=>`<button class="stat${filter===v?" on":""}"${color?` style="--c:${color}"`:""} onclick="setAdminFilter('${v}')" aria-pressed="${filter===v}"><span class="stat-n">${loading?0:real.filter(r=>matchesFilter(r,v)).length}</span><span class="stat-l">${label}</span></button>`;
+  return `<div class="adm-head"><div><h1>Admin panel</h1><p class="sub"${loading?" data-skeleton":""}>${sub}</p></div><button class="btn g adm-refresh" onclick="adminRefresh()">Refresh</button></div>
+  <div class="stats"${loading?" data-skeleton":""}>${stat("all","All requests")}${stat("review","To review","var(--wn)")}${stat("active","Active","var(--ac)")}${stat("done","Closed","var(--ok)")}</div>
+  <div class="adm-tools"><label class="adm-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="admSearch" type="text" inputmode="search" autocomplete="off" aria-label="Search requests" placeholder="Search reference, subject or student" value="${esc(adminQuery)}" oninput="admSearch(this.value)"></label><span class="adm-count" id="admCount">${loading?"":rows.length+" shown"}</span></div>
+  <div id="admWrap">${admTableHTML(rows,loading)}</div>`;
+}
+function setAdminFilter(v){ filter=v; render(); }
+function admSearch(v){
+  adminQuery=v; const rows=admFiltered();
+  const w=$("admWrap"); if(w) w.innerHTML=admTableHTML(rows,false);
+  const c=$("admCount"); if(c) c.textContent=rows.length+" shown";
+}
+async function adminRefresh(){
+  if(busy) return;
+  try{ setBusy(true); await refresh(); if(screen==="home") render(); toast("Updated"); }
+  catch(e){ notify(e.message); } finally{ setBusy(false); }
+}
+function back(){ if(screen==="auth") go("intro"); else go("home"); }
+function newRequest(){ form={subject:"",pages:5,deadline:"Within 7 days",notes:"",files:[],method:"mobile",contact:"",guardian:""}; go("details"); }
+async function submitAuth(){
+  if(busy) return;
+  const loginId=$("loginId").value.trim(), password=$("password").value;
+  if(!loginId){ notify("Enter your name or admin email"); return; }
+  // NO password length check - any password works, even 1 character
+  if(!password){ notify("Enter password"); return; }
+  if(authMode==="up"){
+    if(loginId.includes("@")){ notify("Admin cannot create account. Use Sign in with admin email."); return; }
+    if(loginId.length<2){ notify("Enter your name"); return; }
+    try{ setBusy(true); const res=await api("/api/auth/register",{method:"POST",body:JSON.stringify({name:loginId,password})}); user=res.user; loadHome(); }
+    catch(e){ notify(e.message); } finally{ setBusy(false); }
+    return;
+  }
+  const isAdmin = loginId.includes("@");
+  const payload = isAdmin
+    ? { loginId, email: loginId, role: "admin", password }
+    : { loginId, name: loginId, role: "student", password };
+  try{ setBusy(true); const res=await api("/api/auth/login",{method:"POST",body:JSON.stringify(payload)}); user=res.user; loadHome(); }
+  catch(e){ notify(e.message); } finally{ setBusy(false); }
+}
+async function logout(){ try{ await api("/api/auth/logout",{method:"POST"}); }catch(_){} clearHint(); loading=false; user=null; requests=[]; selected=null; adminQuery=""; filter="all"; go("intro"); }
+async function submitRequest(){
+  if(busy) return;
+  if(uploading){ notify("Please wait for your files to finish uploading."); return; }
+  if(!form.files.length){
+    const dz=$("dropZone"); if(dz){ dz.classList.add("err"); dz.scrollIntoView({behavior:"smooth",block:"center"}); }
+    notify("Please upload your assignment resource (question paper or notes) before submitting."); return;
+  }
+  const subject=$("subject").value.trim();
+  if(subject.length<3){ notify("Subject too short"); return; }
+  const payload={subject, pages:Number($("pages").value), deadline:$("deadline").value, notes:$("notes").value.trim(), files:form.files, method:$("method").value, contact:$("contact").value.trim()};
+  if(!payload.contact){ notify("Enter contact details"); return; }
+  // Optimistic: show the request in the dashboard right away, confirm with the server in the background.
+  const tmp={...payload,ref:"pending-"+Date.now(),status:"Submitted",owner:user.id,by:user.name,quote:null,hist:[],created_at:new Date().toISOString(),_pending:true};
+  syncForm(); requests=[tmp,...requests]; setBusy(true); go("home");
+  try{
+    const res=await api("/api/requests",{method:"POST",body:JSON.stringify(payload)});
+    requests=[res.request,...requests.filter(r=>r.ref!==tmp.ref&&r.ref!==res.request.ref)]; saveHint();
+    toast("Request submitted · "+res.request.ref);
+    if(screen==="home") render();
+  }catch(e){
+    requests=requests.filter(r=>r.ref!==tmp.ref);
+    notify(e.message+" Your details were kept, please try again."); go("details");
+  }finally{ setBusy(false); }
+}
+async function sendQuote(ref){
+  const amount=$("quoteAmount").value, delivery=$("quoteDate").value;
+  if(!amount||!delivery){ notify("Enter price and delivery date"); return; }
+  const payload={amount:Number(amount),delivery,note:$("quoteNote").value.trim()};
+  try{ setBusy(true); await api(`/api/requests/${encodeURIComponent(ref)}/quote`,{method:"POST",body:JSON.stringify(payload)}); await refresh(); go("detail",ref); }
+  catch(e){ notify(e.message); } finally{ setBusy(false); }
+}
+async function changeStatus(ref,status){
+  try{ setBusy(true); await api(`/api/requests/${encodeURIComponent(ref)}/status`,{method:"POST",body:JSON.stringify({status})}); await refresh(); go("detail",ref); }
+  catch(e){ notify(e.message); } finally{ setBusy(false); }
+}
+async function decision(ref,approved){
+  try{ setBusy(true); await api(`/api/requests/${encodeURIComponent(ref)}/decision?approved=${approved}`,{method:"POST"}); await refresh(); go("detail",ref); }
+  catch(e){ notify(e.message); } finally{ setBusy(false); }
+}
+boot();
+</script>
+</body>
+</html>
